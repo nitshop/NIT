@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>НИТЬ — интернет-магазин одежды</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light dark;
+--bg:#eef1f4;--surface:#fff;--ink:#17233b;--muted:#5b6678;--line:#d5dbe3;--accent:#17233b;--on-accent:#fff;--mark:#e3a92b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111826;--surface:#1a2436;--ink:#eef1f6;--muted:#9aa5b8;--line:#2c3850;--accent:#e3a92b;--on-accent:#111826;--mark:#e3a92b}}
+:root[data-theme="dark"]{--bg:#111826;--surface:#1a2436;--ink:#eef1f6;--muted:#9aa5b8;--line:#2c3850;--accent:#e3a92b;--on-accent:#111826;--mark:#e3a92b}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Trebuchet MS","Segoe UI",Arial,sans-serif}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:12px 20px}
+.logo{font:700 28px/1 Georgia,"Times New Roman",serif;letter-spacing:.04em}
+.logo i{display:inline-block;width:10px;height:10px;background:var(--mark);border-radius:50%;margin-left:4px}
+button{font:inherit;cursor:pointer;border:1px solid var(--ink);background:transparent;color:var(--ink);border-radius:999px;padding:8px 16px}
+button:focus-visible,select:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.hero{padding:48px 20px 28px;max-width:1100px;margin:0 auto}
+.hero h1{font:700 clamp(40px,9vw,88px)/.98 Georgia,"Times New Roman",serif;margin:0 0 16px;max-width:12ch}
+.hero p{max-width:46ch;color:var(--muted);margin:0}
+.bar{max-width:1100px;margin:0 auto;padding:12px 20px;display:flex;gap:8px;flex-wrap:wrap}
+.bar button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.grid{max-width:1100px;margin:0 auto;padding:8px 20px 48px;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
+.pic{aspect-ratio:1/1;display:grid;place-items:center}
+.pic svg{width:62%;height:auto}
+.info{padding:14px;display:flex;flex-direction:column;gap:8px;flex:1}
+.info h3{margin:0;font-size:17px}
+.info small{color:var(--muted)}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:auto}
+.price{font-weight:700}
+select{font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px}
+footer{border-top:1px solid var(--line);padding:24px 20px;text-align:center;color:var(--muted);font-size:14px}
+aside{position:fixed;top:0;right:0;bottom:0;width:min(380px,100%);background:var(--surface);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .25s;z-index:10;display:flex;flex-direction:column;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+aside.open{transform:none}
+aside ul{list-style:none;margin:12px 0;padding:0;overflow:auto;flex:1}
+aside li{display:flex;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.total{display:flex;justify-content:space-between;font-weight:700;font-size:18px;margin-bottom:12px}
+.msg{color:var(--muted)}
+@media (prefers-reduced-motion:reduce){aside{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <span class="logo">НИТЬ<i></i></span>
+  <button id="openCart" aria-label="Открыть корзину">Корзина (<span id="cnt">0</span>)</button>
+</header>
+<section class="hero">
+  <h1>Одежда на каждый день</h1>
+  <p>Футболки, худи, джинсы и верхняя одежда. Выберите размер, добавьте в корзину и оформите заказ за минуту.</p>
+</section>
+<div class="bar" role="group" aria-label="Категории" id="filters"></div>
+<main class="grid" id="grid"></main>
+<footer>НИТЬ · учебный проект · Саратовский политехнический колледж, 2026</footer>
+
+<aside id="cart" aria-label="Корзина">
+  <div style="display:flex;justify-content:space-between;align-items:center"><strong>Ваша корзина</strong><button id="closeCart">Закрыть</button></div>
+  <ul id="items"></ul>
+  <div class="total"><span>Итого</span><span id="sum">0 ₽</span></div>
+  <button class="primary" id="buy">Оформить заказ</button>
+  <p class="msg" id="msg" role="status"></p>
+</aside>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+var P=[
+{n:"Футболка базовая",c:"Футболки",p:1290,col:"#c9d6e8",t:"t"},
+{n:"Футболка с принтом",c:"Футболки",p:1690,col:"#e3a92b",t:"t"},
+{n:"Худи оверсайз",c:"Худи",p:3990,col:"#4c5d7a",t:"h"},
+{n:"Худи на молнии",c:"Худи",p:4390,col:"#2e3a52",t:"h"},
+{n:"Джинсы прямые",c:"Джинсы",p:3490,col:"#5b7fa8",t:"p"},
+{n:"Джинсы зауженные",c:"Джинсы",p:3790,col:"#34495f",t:"p"},
+{n:"Куртка-бомбер",c:"Верхняя одежда",p:6990,col:"#6b7d5a",t:"h"},
+{n:"Пуховик зимний",c:"Верхняя одежда",p:9490,col:"#b24a3f",t:"h"}
+];
+var cats=["Все"].concat(P.map(function(x){return x.c}).filter(function(v,i,a){return a.indexOf(v)===i}));
+var cart=[],cur="Все";
+var S={t:'<path d="M20 20l20-8c3 6 17 6 20 0l20 8 12 22-14 6v40H22V48L8 42z"/>',
+h:'<path d="M18 22l18-10c2 8 26 8 28 0l18 10 12 36-14 4-2-16v44H22V46l-2 16-14-4z"/>',
+p:'<path d="M24 8h52l6 90H56L50 40l-6 58H18z"/>'};
+function fmt(n){return n.toLocaleString("ru-RU")+" ₽"}
+function pic(x){return '<div class="pic" style="background:'+x.col+'22"><svg viewBox="0 0 100 106" fill="'+x.col+'" aria-hidden="true">'+S[x.t]+'</svg></div>'}
+function drawFilters(){var f=document.getElementById("filters");f.innerHTML="";cats.forEach(function(c){var b=document.createElement("button");b.textContent=c;b.setAttribute("aria-pressed",c===cur);b.onclick=function(){cur=c;drawFilters();drawGrid()};f.appendChild(b)})}
+function drawGrid(){var g=document.getElementById("grid");g.innerHTML="";P.forEach(function(x,i){if(cur!=="Все"&&x.c!==cur)return;
+var d=document.createElement("article");d.className="card";
+d.innerHTML=pic(x)+'<div class="info"><h3>'+x.n+'</h3><small>'+x.c+'</small><div class="row"><span class="price">'+fmt(x.p)+'</span><select aria-label="Размер" id="s'+i+'"><option>S</option><option selected>M</option><option>L</option><option>XL</option></select></div><button class="primary" data-i="'+i+'">В корзину</button></div>';
+g.appendChild(d)});
+g.querySelectorAll("button[data-i]").forEach(function(b){b.onclick=function(){add(+b.dataset.i)}})}
+function add(i){var s=document.getElementById("s"+i).value;var f=cart.filter(function(l){return l.i===i&&l.s===s})[0];if(f)f.q++;else cart.push({i:i,s:s,q:1});drawCart();document.getElementById("msg").textContent=""}
+function drawCart(){var u=document.getElementById("items");u.innerHTML="";var sum=0,cnt=0;
+cart.forEach(function(l,k){var x=P[l.i];sum+=x.p*l.q;cnt+=l.q;var li=document.createElement("li");
+li.innerHTML='<span>'+x.n+', '+l.s+' × '+l.q+'</span><span><b>'+fmt(x.p*l.q)+'</b> <button aria-label="Убрать">✕</button></span>';
+li.querySelector("button").onclick=function(){cart.splice(k,1);drawCart()};u.appendChild(li)});
+if(!cart.length)u.innerHTML='<li class="msg">Корзина пуста. Добавьте товар из каталога.</li>';
+document.getElementById("sum").textContent=fmt(sum);document.getElementById("cnt").textContent=cnt}
+var a=document.getElementById("cart");
+document.getElementById("openCart").onclick=function(){a.classList.add("open")};
+document.getElementById("closeCart").onclick=function(){a.classList.remove("open")};
+document.getElementById("buy").onclick=function(){var m=document.getElementById("msg");
+if(!cart.length){m.textContent="Сначала добавьте товар в корзину.";return}
+m.textContent="Заказ оформлен. Сумма: "+document.getElementById("sum").textContent+". Это учебный проект, оплата не производится.";cart=[];drawCart()};
+drawFilters();drawGrid();drawCart();
+try{var tg=window.Telegram&&window.Telegram.WebApp;if(tg){tg.ready();tg.expand();
+document.getElementById("buy").addEventListener("click",function(){if(tg.HapticFeedback)tg.HapticFeedback.notificationOccurred("success")})}}catch(e){}
+</script>
+</body>
+</html>
